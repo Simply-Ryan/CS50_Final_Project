@@ -1,0 +1,20 @@
+{% extends "template.html" %}
+
+{% block title %}
+    Log In
+{% endblock %}
+
+{% block content %}
+    <form action="/login" method="post">
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" id="username" name="username" placeholder="Username" type="text" required>
+        </div>
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" id="password" name=" password" placeholder="Password" type="password" required>
+        </div>
+        <button class="center_txt" type="submit">Log In</button>
+    </form>
+    <footer class="center_txt">
+        Don't have an account? <a href="/register">Register</a>
+    </footer>
+{% endblock %}
