@@ -1,0 +1,32 @@
+PLANIFICATION
+
+Home:
+- Total money (all categories)
+- A few categories (with money)
+- Latest transfers
+
+
+Transfers:
+- Send money
+- Request money
+- Transfer between accounts
+- Deposit a cheque
+- Manage recipients
+
+Bills (automatic deduction):
+- Create/delete bills
+
+Settings:
+- Profile & preferences
+- Account settings
+- Terms & conditions
+- Log out/Sign out
+
+Profile & preferences:
+- Sign In ID & security
+- App preferences
+
+Account settings:
+- First & last names
+- Username
+- Profile picture

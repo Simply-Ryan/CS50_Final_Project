@@ -5,18 +5,21 @@
 {% endblock %}
 
 {% block content %}
-    <h1 class="center bold">Log In</h1>
+    <h1 class="center_txt">Register</h1>
     <br>
     <div class="center">
         <form action="/register" method="post">
             <div class="mb-3">
-                <input class="form-control mx-auto w-auto" id="firstname" name="firstname" placeholder="First Name" type="text" autocomplete="off" autofocus required>    
+                <input class="form-control mx-auto w-auto" id="first_name" name="first_name" placeholder="First Name" type="text" autocomplete="off" autofocus required>    
             </div>
             <div class="mb-3">
-                <input class="form-control mx-auto w-auto" id="lastname" name="lastname" placeholder="Last Name" type="text" required>
+                <input class="form-control mx-auto w-auto" id="last_name" name="last_name" placeholder="Last Name" type="text" required>
             </div>
             <div class="mb-3">
                 <input class="form-control mx-auto w-auto" id="username" name="username" placeholder="Username" type="text" required>
+            </div>
+            <div class="mb-3">
+                <input class="form-control mx-auto w-auto" id="email" name="email" placeholder="Email Address" type="email" required>
             </div>
             <div class="mb-3">
                 <input class="form-control mx-auto w-auto" id="password" name="password" placeholder="Password" type="password" required>
@@ -24,7 +27,9 @@
             <div class="mb-3">
                 <input class="form-control mx-auto w-auto" id="pwConfirm" name="pwConfirm" placeholder="Confirm Password" type="password" required>
             </div>
-            <button class="center_txt" type="submit">Create Account</button>
+            <div class="button_container">
+                <button class="btn btn-primary" type="submit">Create Account</button>
+            </div>
         </form>
     </div>
 {% endblock %}

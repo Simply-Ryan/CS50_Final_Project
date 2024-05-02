@@ -1,0 +1,28 @@
+{% extends "template.html" %}
+
+{% block title %}
+    Send
+{% endblock %}
+
+{% block content %}
+    <h1 class="center_txt">Send Money</h1>
+    <br>
+    <form action="/send" method="post">
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" id="username" name="username" placeholder="Recipient Username" type="text" autocomplete="off" autofocus required>
+        </div>
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" id="amount" name="amount" placeholder="Amount" type="number" autocomplete="off" required>
+        </div>
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" id="reason" name="reason" placeholder="Reason" type="text">
+        </div>
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" id="password" name="password" placeholder="Password" type="password" autocomplete="off" required>
+        </div>
+        </div>
+        <div class="centered">
+            <button class="centered" type="submit">Send</button>
+        </div>
+    </form>
+{% endblock %}

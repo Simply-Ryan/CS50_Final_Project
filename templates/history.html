@@ -1,0 +1,27 @@
+{% extends "template.html" %}
+
+{% block title %}
+    History
+{% endblock %}
+
+{% block content %}
+    <h1 class="center_txt">History</h1>
+    <br>
+    <table id="history_table">
+        <thead>
+            <tr><th>Type</th><th>Sender</th><th>Receiver</th><th>Amount</th><th>Reason</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+            {% for type, sender_id, receiver_id, amount, reason, timestamp in transactions %}
+                <tr>
+                    <td>{{ type }}</td>
+                    <td>{{ sender_id }}</td>
+                    <td>{{ receiver_id }}</td>
+                    <td>{{ amount }}</td>
+                    <td>{{ reason }}</td>
+                    <td>{{ timestamp }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

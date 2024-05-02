@@ -1,0 +1,18 @@
+{% extends "template.html" %}
+
+{% block title %}
+    Add
+{% endblock %}
+
+{% block content %}
+    <h1 class="center_txt">Add Money</h1>
+    <br>
+    <form action="/edit" method="post">
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" id="amount" name="amount" placeholder="Amount" type="number" step="1" autocomplete="off" autofocus required>
+        </div>
+        <div class="centered">
+            <button class="centered" type="submit">Add Money</button>
+        </div>
+    </form>
+{% endblock %}

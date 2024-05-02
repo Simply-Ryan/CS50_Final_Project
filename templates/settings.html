@@ -3,3 +3,35 @@
 {% block title %}
     Settings
 {% endblock %}
+
+{% block content %}
+    <h1 class="center_txt">Settings</h1>
+    <br>
+    <h3>Account</h3>
+    <br>
+    <img src="" alt="Profile picture"> <a class="edit" id="edit_pfp">edit</a>
+    <div>First name: <div class="bold">{{ user[0] }}</div> <a class="edit" id="edit_fname">edit</a></div>
+    <div>Last name: <div class="bold">{{ user[1] }}</div> <a class="edit" id="edit_lname">edit</a></div>
+    <div >Username: <div class="bold">{{ user[2] }}</div> <a class="edit" id="edit_user">edit</a></div>
+    <div>Email address: <div class="bold">{{ user[3] }}</div> <a class="edit" id="edit_email">edit</a></div>
+    <br>
+    <h3>Preferences</h3>
+    <br>
+    <button class="btn btn-primary" id="toggle-theme" onclick="toggleTheme()">Toggle theme</button>
+    <br>
+    <a href="/delete_account"><button class="btn btn-primary" id="delete_account" href="/delete_account">Delete Account</button></a>
+    <br>
+    <a href="/signout"><button class="btn btn-primary" id="signout">Sign Out</button></a>
+
+    <script>
+        // Toggle theme
+        function toggleTheme() {
+            document.body.classList.toggle("dark-theme");
+            if (document.body.classList.contains("dark-theme")) {
+                localStorage.setItem("theme", "dark");
+            } else {
+                localStorage.setItem("theme", "light");
+            }
+        }
+    </script>
+{% endblock %}

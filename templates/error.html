@@ -5,5 +5,8 @@
 {% endblock %}
 
 {% block content %}
-    Error {{ code }}: {{ message }}
+    <h1 class="center_txt bold">Error {{ code }}</h1>
+    <h3 class="center_txt">{{ message }}</h3>
+    <br>
+    <div class="center_txt"><a href="/home">Try again</a></div>
 {% endblock %}

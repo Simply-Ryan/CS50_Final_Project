@@ -1,0 +1,43 @@
+{% extends "template.html" %}
+
+{% block title %}
+    Home
+{% endblock %}
+
+{% block content %}
+    <h1 class="center_txt">Home</h1>
+    <br>
+    <div class="center_txt">Current balance: {{ balance }}</div>
+    <br>
+    <h3 class="center_txt">Latest Requests</h3>
+    <br>
+    <table id="requests_table">
+        <thead>
+            <tr><th>Sender</th><th>Amount</th><th>Reason</th><th>Date</th><th>Response</th></tr>
+        </thead>
+        <tbody>
+            {% for sender, amount, reason, timestamp in requests %}
+                <tr>
+                    <td>{{ sender }}</td>
+                    <td>{{ amount }}</td>
+                    <td>{{ reason }}</td>
+                    <td>{{ timestamp }}</td>
+                    <td>
+                        <form action="/accept" method="post">
+                            <input type="hidden" name="receiver" value="{{ sender }}">
+                            <input type="hidden" name="amount" value="{{ amount }}">
+                            <input type="hidden" name="reason" value="{{ reason }}">
+                            <button type="submit">✓</button>
+                        </form>
+                        <form action="/reject" method="post">
+                            <input type="hidden" name="receiver" value="{{ sender }}">
+                            <input type="hidden" name="amount" value="{{ amount }}">
+                            <input type="hidden" name="reason" value="{{ reason }}">
+                            <button type="submit">X</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

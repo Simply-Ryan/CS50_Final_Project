@@ -1,3 +1,38 @@
+/* Dark theme styling */
+
+body {
+  background-color: #f0f0f0;
+  color: #000000;
+  transition: background-color 0.5s, color 0.5s;
+}
+
+.dark-theme {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.dark-theme .sidebar {
+  background-color: #007bff; 
+  height: 100%;
+  width: 200px; /* Width of sidebar */
+  position: fixed;
+  top: 0; /* Positioning relative to top of page */
+  left: 0; /* Positioning relative to left of page */
+  padding-top: 20px; /* Distance first element to top */
+}
+
+.dark-theme .sidebar h1, .dark-theme .sidebar a {
+  color: #000000; 
+}
+
+.dark-theme .sidebar a:hover {
+  background-color: #ffffff;
+}
+
+.dark-theme thead{
+  color: #000000;
+}
+
 /* Sidebar styling */
 .sidebar {
   height: 100%;
@@ -5,7 +40,7 @@
   position: fixed;
   top: 0; /* Positioning relative to top of page */
   left: 0; /* Positioning relative to left of page */
-  background-color: #000000; 
+  background-color: #000000;
   padding-top: 20px; /* Distance first element to top */
 }
 
@@ -22,12 +57,12 @@
   text-decoration: none;
   font-size: 20px;
   display: block;
-  color: white;
+  color: #ffffff;
 }
 
 /* Sidebar anchor hovering */
 .sidebar a:hover {
-  background-color: #80bdff;
+  background-color: #007bff;
 }
 
 /* --------------- CONTENT SECTION --------------- */
@@ -51,15 +86,62 @@
   font-weight: bold;
 }
 
+#logout {
+  background-color: red;
+}
+
+#logout {
+  background-color: red;
+}
+
 /* Form styling */
+
+.button_container {
+  display: flex;
+  justify-content: center;
+}
+
 button.submit {
-  background-color: #80bdff;
-  border: #80bdff;
+  background-color: #007bff;
+  border: #007bff;
   border-radius: 10px;
   height: 35px;
   width: 130px;
 }
 
 button.submit:hover {
-  background-color: #4ba2ff;
+  background-color: #007bff;
+}
+
+button.center {
+  display: block;
+  margin: 0 auto;
+}
+
+.center {
+  text-align: center;
+}
+
+/* Transaction table styling */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table th, table td {
+  padding: 8px;
+  text-align: left;
+}
+
+table th {
+  background-color: #f2f2f2;
+}
+
+table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+table tr:hover {
+  background-color: #007bff;
 }
