@@ -1,11 +1,12 @@
 import sqlite3
 import locale
-import helpers
+from datetime import datetime, timedelta
 from flask import Flask, redirect, render_template, request, session
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 
 # Global Variables
+bank_user_id = 1
 db_name = "bank.db"
 home_route = "/home"
 signin_route = "/signin"
@@ -13,11 +14,13 @@ signout_route = "/signout"
 register_route = "/register"
 error_route = "/error"
 settings_route = "/settings"
+edit_profile_route = "/settings/edit"
 transfers_route = "/transfers"
 send_route = "/send"
 request_route = "/request"
 accept_route = "/accept"
 reject_route = "/reject"
+loans_route = "/loans"
 edit_route = "/edit"
 history_route = "/history"
 delete_account_route = "/delete_account"
@@ -38,7 +41,7 @@ db.execute("CREATE TABLE IF NOT EXISTS accounts (id INTEGER PRIMARY KEY AUTOINCR
 connection.commit()
 db.execute("CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT NOT NULL, sender_id INTEGER, receiver_id INTEGER, amount REAL NOT NULL, reason TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (sender_id) REFERENCES users(id), FOREIGN KEY (receiver_id) REFERENCES users(id))")
 connection.commit()
-db.execute("CREATE TABLE IF NOT EXISTS loans (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, amount REAL NOT NULL, interest_rate REAL NOT NULL, duration INTEGER NOT NULL, start_date DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES users(id))")
+db.execute("CREATE TABLE IF NOT EXISTS loans (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, amount REAL NOT NULL, interest_rate REAL NOT NULL, duration INTEGER NOT NULL, reason TEXT, start_date DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES users(id))")
 connection.commit()
 db.execute("CREATE TABLE IF NOT EXISTS requests (id INTEGER PRIMARY KEY AUTOINCREMENT, sender_id INTEGER, receiver_id INTEGER, amount REAL NOT NULL, reason TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (sender_id) REFERENCES users(id), FOREIGN KEY (receiver_id) REFERENCES users(id))")
 connection.commit()
@@ -49,6 +52,44 @@ def signed_in():
         return False
     return True
 # Login required
+
+@app.before_request
+def before_request_tasks():
+    if not signed_in():
+        return
+
+    connection = sqlite3.connect(db_name)
+    db = connection.cursor()
+
+    # Check loan payment
+    db.execute("SELECT start_date, duration, amount, reason, id FROM loans WHERE user_id = ?", [session["user_id"]])
+    loans = db.fetchall()
+
+    for loan in loans:
+        timestamp = datetime.strptime(loan[0], "%Y-%m-%d %H:%M:%S")
+        if datetime.now() - timestamp > timedelta(days=int(loan[1])):
+            # Repay loan automatically
+            send_money("Loan repayed", session["user_id"], bank_user_id, loan[2], loan[3])
+
+            # Delete loan
+            db.execute("DELETE FROM loans WHERE id = ?", [loan[4]])
+            connection.commit()
+
+    return
+
+# Get user's username
+@app.context_processor
+def get_username():
+    username = None
+    if "user_id" in session:
+        connection = sqlite3.connect(db_name)
+        db = connection.cursor()
+
+        db.execute("SELECT username FROM users WHERE id = ?", [session["user_id"]])
+        username = db.fetchone()[0]
+        connection.close()
+
+    return dict(username=username)
 
 # Transfer money
 def send_money(type, sender_id, receiver_id, amount, reason):
@@ -79,6 +120,13 @@ def send_money(type, sender_id, receiver_id, amount, reason):
     db.execute("INSERT INTO transactions (type, sender_id, receiver_id, amount, reason) VALUES (?, ?, ?, ?, ?)", (type, sender_id, receiver_id, amount, reason))
     connection.commit()
 
+def error(msg, code):
+    return render_template("error.html", message=msg, code=code)
+
+def usd(value):
+    # Format values as USD
+    return f"${value:,.2f}"
+
 # Redirect to home
 @app.route("/")
 def index():
@@ -89,6 +137,7 @@ def index():
 def home():
     if not signed_in():
         return redirect(signin_route)
+    
     connection = sqlite3.connect(db_name)
     db = connection.cursor()
 
@@ -208,6 +257,39 @@ def settings():
 
     return render_template("settings.html", user=user)
 
+# Edit profile
+@app.route(edit_profile_route, methods=["GET", "POST"])
+def edit_profile():
+    if not signed_in():
+        return redirect(signin_route)
+    
+    connection = sqlite3.connect(db_name)
+    db = connection.cursor()
+    
+    if request.method == "GET":
+        # Get user data
+        
+        db.execute("SELECT first_name, last_name, username, email FROM users WHERE id = ?", [session["user_id"]])
+        data = db.fetchone()
+
+        return render_template("edit_profile.html", data=data)
+    
+    # Check fields validity
+    if not request.form.get("first_name") or not request.form.get("last_name") or not request.form.get("username") or not request.form.get("email"):
+        return error("All fields must be filled.", 403)
+    
+    # Check username validity
+    db.execute("SELECT id, username, email FROM users WHERE username = ? OR email = ?", (request.form.get("username"), request.form.get("email")))
+    exists = db.fetchone()
+
+    if exists and int(exists[0]) != session["user_id"]:
+        return error("Username and/or email already exist(s).", 403)
+    
+    db.execute("UPDATE users SET first_name = ?, last_name = ?, username = ?, email = ? WHERE id = ?", (request.form.get("first_name"), request.form.get("last_name"), request.form.get("username"), request.form.get("email"), session["user_id"]))
+    connection.commit()
+
+    return redirect(settings_route)
+
 # Transfer
 @app.route(transfers_route)
 def transfer():
@@ -267,7 +349,15 @@ def edit():
     except ValueError:
         return error("Invalid amount.", 403)
 
-    send_money("Edit", session["user_id"], session["user_id"], amount, "N/A")
+    # Add money to user balance
+    db.execute("SELECT balance FROM accounts WHERE user_id = ?", [session["user_id"]])
+    user_balance = int(db.fetchone()[0])
+    db.execute("UPDATE accounts SET balance = ? WHERE user_id = ?", (str(user_balance + amount), session["user_id"]))
+    connection.commit()
+
+    # Log transaction
+    db.execute("INSERT INTO transactions (type, sender_id, receiver_id, amount) VALUES (?, ?, ?, ?)", ("Balance edit", session["user_id"], session["user_id"], amount))
+    connection.commit()
 
     return redirect(home_route)
 
@@ -374,6 +464,80 @@ def reject():
     connection.commit()
 
     return redirect(home_route)
+
+@app.route(loans_route, methods=["GET", "POST"])
+def loans():
+    if not signed_in():
+        return redirect(signin_route)
+    
+    connection = sqlite3.connect(db_name)
+    db = connection.cursor()
+
+    if request.method == "GET":
+        # Get current loans
+        db.execute("SELECT amount, interest_rate, duration, reason, start_date FROM loans WHERE user_id = ?", [session["user_id"]])
+        loans = db.fetchall()
+        
+        loan_table = []
+        for amount, interest, duration, reason, start_date in loans:
+            amount = locale.currency(amount, grouping=True)
+            interest = f"{interest}%"
+            loan_table.append((amount, interest, duration, reason, start_date))
+
+        # Most recent first
+        loan_table.reverse()
+
+        return render_template("loans.html", loan_table=loan_table)
+    
+    form_id = request.form.get("form_id")
+    if form_id == "1": # User is loaning money
+        # Check amount validity
+        try:
+            amount = int(request.form.get("amount"))
+            duration = int(request.form.get("duration"))
+        except ValueError:
+            return error("Invalid loan amount or duration.", 403)
+        
+        if amount < 0 or duration < 0:
+            return error("Invalid loan amount or duration.", 403)
+        
+        # Check password validity
+        db.execute("SELECT password FROM users WHERE id = ?", [session["user_id"]])
+        password = db.fetchone()[0]
+        if not check_password_hash(password, request.form.get("password")):
+            return error("Incorrect password.", 403)
+        
+        # Loan money
+        send_money("Loan", bank_user_id, session["user_id"], amount, request.form.get("reason"))
+
+    elif form_id == "2": # User is repaying a loan
+        # Check loan validity
+        amount = int(request.form.get("amount"))
+        interest = int(request.form.get("interest"))
+        duration = int(request.form.get("duration"))
+        reason = request.form.get("reason")
+        start_date = request.form.get("start_date")
+
+        db.execute("SELECT id FROM loans WHERE user_id = ? AND amount = ? AND interest = ? AND duration = ? AND reason = ? AND start_date = ?", (session["user_id"], amount, interest, duration, reason, start_date))
+        loan_id = db.fetchone()
+
+        if not loan_id:
+            return error("Loan does not exist.", 403)
+        
+        # Calculate interest
+        amount_with_interest = amount + amount * (interest / 100)
+
+        # Pay loan
+        send_money("Loan repayed", session["user_id"], bank_user_id, amount_with_interest, reason)
+
+        # Delete loan
+        db.execute("DELETE FROM loans WHERE id = ?", [loan_id[0]])
+        connection.commit()
+
+        return redirect(home_route)
+
+    # Invalid form
+    return error("Invalid loan form.", 403)
 
 @app.route(history_route)
 def history():

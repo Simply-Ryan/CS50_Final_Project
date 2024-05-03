@@ -7,21 +7,36 @@
 {% block content %}
     <h1 class="center_txt">Settings</h1>
     <br>
-    <h3>Account</h3>
+    <h3>Profile  <a class="edit" href="/settings/edit">edit</a></h3>
     <br>
-    <img src="" alt="Profile picture"> <a class="edit" id="edit_pfp">edit</a>
-    <div>First name: <div class="bold">{{ user[0] }}</div> <a class="edit" id="edit_fname">edit</a></div>
-    <div>Last name: <div class="bold">{{ user[1] }}</div> <a class="edit" id="edit_lname">edit</a></div>
-    <div >Username: <div class="bold">{{ user[2] }}</div> <a class="edit" id="edit_user">edit</a></div>
-    <div>Email address: <div class="bold">{{ user[3] }}</div> <a class="edit" id="edit_email">edit</a></div>
+    <div class="user_info">
+        <span>First name:</span> 
+        <span class="bold">{{ user[0] }}</span> 
+    </div>
+    <div class="user_info">
+        <span>Last name:</span> 
+        <span class="bold">{{ user[1] }}</span> 
+    </div>
+    <div class="user_info">
+        <span>Username:</span> 
+        <span class="bold">{{ user[2] }}</span> 
+    </div>
+    <div class="user_info">
+        <span>Email address:</span> 
+        <span class="bold">{{ user[3] }}</span> 
+    </div>
     <br>
     <h3>Preferences</h3>
     <br>
     <button class="btn btn-primary" id="toggle-theme" onclick="toggleTheme()">Toggle theme</button>
+    <br><br>
+    <form action="/delete_account">
+        <button class="btn btn-primary" id="delete_account">Delete Account</button>
+    </form>
     <br>
-    <a href="/delete_account"><button class="btn btn-primary" id="delete_account" href="/delete_account">Delete Account</button></a>
-    <br>
-    <a href="/signout"><button class="btn btn-primary" id="signout">Sign Out</button></a>
+    <form action="/signout">
+        <button class="btn btn-primary" id="signout" href="/signout">Sign Out</button>
+    </form>
 
     <script>
         // Toggle theme

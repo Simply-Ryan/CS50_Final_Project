@@ -1,0 +1,27 @@
+{% extends "template.html" %}
+
+{% block title %}
+    Edit Profile
+{% endblock %}
+
+{% block content %}
+    <h1 class="center_txt">Edit Profile</h1>
+    <br>
+    <form action="/settings/edit" method="post">
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" name="first_name" placeholder="First Name" type="text" autocomplete="off" autofocus required>    
+        </div>
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" name="last_name" placeholder="Last Name" type="text" autocomplete="off" required>    
+        </div>
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" name="username" placeholder="Username" type="text" autocomplete="off" required>    
+        </div>
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" name="email" placeholder="Email Address" type="email" autocomplete="off" required>    
+        </div>
+        <div class="button_container">
+            <button class="btn btn-primary" type="submit">Save Changes</button>
+        </div>
+    </form>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "template.html" %}
+
+{% block title %}
+    Loans
+{% endblock %}
+
+{% block content %}
+    <h1 class="center_txt">Loans</h1>
+    <br>
+    <h3 class="center_txt">New Loan</h3>
+    <br>
+    <form action="/loans" method="post">
+        <input type="hidden" name="form_id" value="1">
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" name="amount" placeholder="Amount" type="number" min="0" autocomplete="off" autofocus required>    
+        </div>
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" name="duration" placeholder="Duration (Days)" type="number" min="0" autocomplete="off" required>    
+        </div>
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" name="reason" placeholder="Reason (Optional)" type="text" autocomplete="on">    
+        </div>
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" name="password" placeholder="Password" type="password" autocomplete="off" required>    
+        </div>
+        <div class="button_container">
+            <button class="btn btn-primary" type="submit">Borrow Money</button>
+        </div>
+    </form>
+    <footer class="center_txt">
+        10% Interest will be applied.
+    </footer>
+    <br>
+    <h3 class="center_txt">Ongoing Loans</h3>
+    <table>
+        <thead><th>Amount</th><th>Interest (%)</th><th>Duration</th><th>Reason</th><th>Start Date</th></thead>
+        <tbody>
+            {% for amount, interest, duration, reason, start_date in loan_table %}
+                <tr>
+                    <td>{{ amount }}</td>
+                    <td>{{ interest }}</td>
+                    <td>{{ duration }}</td>
+                    <td>{{ reason }}</td>
+                    <td>{{ start_date }}</td>
+                    <td>
+                        <form action="/loans" method="post">
+                            <input type="hidden" name="form_id" value="2">
+                            <input type="hidden" name="amount" value="{{ amount }}">
+                            <input type="hidden" name="interest" value="{{ interest }}">
+                            <input type="hidden" name="duration" value="{{ duration }}">
+                            <input type="hidden" name="reason" value="{{ reason }}">
+                            <input type="hidden" name="start_date" value="{{ start_date }}">
+                            <button type="submit">Pay Early</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <footer>Repaid loans can be found in history.</footer>
+{% endblock %}

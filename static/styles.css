@@ -3,7 +3,6 @@
 body {
   background-color: #f0f0f0;
   color: #000000;
-  transition: background-color 0.5s, color 0.5s;
 }
 
 .dark-theme {
@@ -21,7 +20,7 @@ body {
   padding-top: 20px; /* Distance first element to top */
 }
 
-.dark-theme .sidebar h1, .dark-theme .sidebar a {
+.dark-theme .sidebar h1, .dark-theme .sidebar a, .dark-theme .sidebar #username_footer {
   color: #000000; 
 }
 
@@ -65,6 +64,10 @@ body {
   background-color: #007bff;
 }
 
+.sidebar footer {
+  padding: 10px;
+}
+
 /* --------------- CONTENT SECTION --------------- */
 
 /* Content area styling */
@@ -75,6 +78,10 @@ body {
 
 .content h1 {
   font-weight: bold;
+}
+
+.content button {
+  padding-bottom: 10px;
 }
 
 .center_txt {
@@ -144,4 +151,25 @@ table tr:nth-child(even) {
 
 table tr:hover {
   background-color: #007bff;
+}
+
+/* User settings */
+.user_info {
+  display: flex;
+  align-items: center;
+}
+
+span {
+  margin-right: 5px;
+}
+
+.edit {
+  font-size: small;
+}
+
+/* Other styling */
+#username_footer {
+  font-size: small;
+  margin: 5px;
+  color: #ffffff;
 }

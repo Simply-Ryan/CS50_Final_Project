@@ -1,6 +1,4 @@
 **WORK IN PROGRESS**
 
 REQUIREMENTS:
-- Python
 - Flask
-- SQLite3
