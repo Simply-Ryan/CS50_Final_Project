@@ -69,7 +69,9 @@ def before_request_tasks():
         timestamp = datetime.strptime(loan[0], "%Y-%m-%d %H:%M:%S")
         if datetime.now() - timestamp > timedelta(days=int(loan[1])):
             # Repay loan automatically
-            send_money("Loan repayed", session["user_id"], bank_user_id, loan[2], loan[3])
+            sent = send_money("Loan repayed", session["user_id"], bank_user_id, loan[2], loan[3])
+            if not sent is None:
+                return error(sent, 403)
 
             # Delete loan
             db.execute("DELETE FROM loans WHERE id = ?", [loan[4]])
@@ -100,11 +102,11 @@ def send_money(type, sender_id, receiver_id, amount, reason):
     db.execute("SELECT balance FROM accounts WHERE user_id = ?", [sender_id])
     user_balance = db.fetchone()[0]
     if amount < 0 or amount > user_balance:
-        return error("Insufficient funds amount.", 403)
+        return "Insufficient funds amount"
     
-    # Check receiver existence
+    # Check receiver existance
     if not receiver_id:
-        return error("Receiver not found.", 403)
+        return "Receiver not found"
     
     # Remove money from sender
     db.execute("SELECT balance FROM accounts WHERE user_id = ?", [sender_id])
@@ -119,6 +121,8 @@ def send_money(type, sender_id, receiver_id, amount, reason):
     # Log transaction
     db.execute("INSERT INTO transactions (type, sender_id, receiver_id, amount, reason) VALUES (?, ?, ?, ?, ?)", (type, sender_id, receiver_id, amount, reason))
     connection.commit()
+
+    return
 
 def error(msg, code):
     return render_template("error.html", message=msg, code=code)
@@ -316,11 +320,10 @@ def send():
         return error("Incorrect password.", 403)
     
     # Check form validity
-    db.execute("SELECT id FROM users WHERE username = ?", [request.form.get("receiver")])
-    receiver_id_row = db.fetchone()
-    if receiver_id_row is None:
+    db.execute("SELECT id FROM users WHERE username = ?", [request.form.get("username")])
+    receiver_id = db.fetchone()[0]
+    if not receiver_id:
         return error("Recipient not found.", 403)
-    receiver_id = int(receiver_id_row[0])
     
     # Check amount validity
     try:
@@ -328,7 +331,9 @@ def send():
     except ValueError:
         return error("Invalid funds amount.", 403)
 
-    send_money("Transaction", session["user_id"], receiver_id, amount, request.form.get("reason"))
+    sent = send_money("Transaction", session["user_id"], receiver_id, amount, request.form.get("reason"))
+    if not sent is None:
+        return error(sent, 403)
 
     return redirect(home_route)
 
@@ -424,7 +429,9 @@ def accept():
         return error("Request does not exist.", 403)
     
     # Send money
-    send_money("Request accepted", session["user_id"], receiver_id, amount, reason)
+    sent = send_money("Request accepted", session["user_id"], receiver_id, amount, reason)
+    if not sent is None:
+        return error(sent, 403)
 
     # Delete request
     db.execute("DELETE FROM requests WHERE sender_id = ? AND receiver_id = ? AND amount = ? AND reason = ?", (receiver_id, session["user_id"], amount, reason))
@@ -489,28 +496,34 @@ def loans():
 
         return render_template("loans.html", loan_table=loan_table)
     
-    form_id = request.form.get("form_id")
-    if form_id == "1": # User is loaning money
-        # Check amount validity
-        try:
-            amount = int(request.form.get("amount"))
-            duration = int(request.form.get("duration"))
-        except ValueError:
-            return error("Invalid loan amount or duration.", 403)
-        
-        if amount < 0 or duration < 0:
-            return error("Invalid loan amount or duration.", 403)
-        
-        # Check password validity
-        db.execute("SELECT password FROM users WHERE id = ?", [session["user_id"]])
-        password = db.fetchone()[0]
-        if not check_password_hash(password, request.form.get("password")):
-            return error("Incorrect password.", 403)
-        
-        # Loan money
-        send_money("Loan", bank_user_id, session["user_id"], amount, request.form.get("reason"))
+    # Check amount validity
+    try:
+        amount = int(request.form.get("amount"))
+        duration = int(request.form.get("duration"))
+    except ValueError:
+        return error("Invalid loan amount or duration.", 403)
+    
+    if amount < 0 or duration < 0:
+        return error("Invalid loan amount or duration.", 403)
+    
+    # Check password validity
+    db.execute("SELECT password FROM users WHERE id = ?", [session["user_id"]])
+    password = db.fetchone()[0]
+    if not check_password_hash(password, request.form.get("password")):
+        return error("Incorrect password.", 403)
+    
+    # Loan money
+    sent = send_money("Loan", bank_user_id, session["user_id"], amount, request.form.get("reason"))
+    if not sent is None:
+        return error(sent, 403)
+    
+    # Log loan
+    db.execute("INSERT INTO loans (user_id, amount, interest_rate, duration, reason) VALUES (?, ?, ?, ?, ?)", (session["user_id"], amount, "10", duration, request.form.get("reason")))
+    connection.commit()
+    
+    return redirect(loans_route)
 
-    elif form_id == "2": # User is repaying a loan
+    """elif form_id == "2": # User is repaying a loan
         # Check loan validity
         amount = int(request.form.get("amount"))
         interest = int(request.form.get("interest"))
@@ -528,7 +541,9 @@ def loans():
         amount_with_interest = amount + amount * (interest / 100)
 
         # Pay loan
-        send_money("Loan repayed", session["user_id"], bank_user_id, amount_with_interest, reason)
+        sent = send_money("Loan repayed", session["user_id"], bank_user_id, amount_with_interest, reason)
+        if not sent is None:
+            return error(sent, 403)
 
         # Delete loan
         db.execute("DELETE FROM loans WHERE id = ?", [loan_id[0]])
@@ -537,7 +552,7 @@ def loans():
         return redirect(home_route)
 
     # Invalid form
-    return error("Invalid loan form.", 403)
+    return error("Invalid loan form.", 403)"""
 
 @app.route(history_route)
 def history():
@@ -572,6 +587,10 @@ def delete_account():
     connection = sqlite3.connect(db_name)
     db = connection.cursor()
     db.execute("DELETE FROM users WHERE id = ?", [session["user_id"]])
+    db.execute("DELETE FROM accounts WHERE user_id = ?", [session["user_id"]])
+    db.execute("DELETE FROM transactions WHERE sender_id = ? OR receiver_id = ?", (session["user_id"], session["user_id"]))
+    db.execute("DELETE FROM loans WHERE user_id = ?", [session["user_id"]])
+    db.execute("DELETE FROM requests WHERE user_id = ?", [session["user_id"]])
     connection.commit()
     session.clear()
     

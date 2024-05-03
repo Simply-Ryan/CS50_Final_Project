@@ -7,13 +7,13 @@
 {% block content %}
     <h1 class="center_txt">Transfers</h1>
     <br>
-    <div class="button_container">
-        <button class="btn btn-primary" href="/send">Send Money</button>
-    </div><br>
-    <div class="button_container">
-        <button class="btn btn-primary" href="/request">Request Money</button>
-    </div><br>
-    <div class="button_container">
-        <button class="btn btn-primary" href="/edit">Edit Balance</button>
-    </div>
+    <form action="/send" class="button_container">
+        <button class="btn btn-primary">Send Money</button>
+    </form><br>
+    <form action="/request" class="button_container">
+        <button class="btn btn-primary">Request Money</button>
+    </form><br>
+    <form action="edit" class="button_container">
+        <button class="btn btn-primary">Edit Balance</button>
+    </form>
 {% endblock %}
