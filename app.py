@@ -155,7 +155,8 @@ def home():
 
     # Get user balance
     db.execute("SELECT balance FROM accounts WHERE user_id = ?", [session["user_id"]])
-    balance = locale.currency(db.fetchone()[0], grouping=True)
+    user_balance = db.fetchone()[0]
+    balance = locale.currency(user_balance, grouping=True)
 
     db.execute("SELECT sender_id, amount, reason, timestamp FROM requests WHERE receiver_id = ?", [session["user_id"]])
     requests = db.fetchall()
@@ -244,7 +245,7 @@ def signin():
     # Check username and password
     db.execute("SELECT id, password FROM users WHERE username = ?", [request.form.get("username")])
     user = db.fetchone()
-    if not check_password_hash(user[1], request.form.get("password")):
+    if user is None or not check_password_hash(user[1], request.form.get("password")):
         return error("Incorrect username or password.", 403)
     
     # Sign user in
@@ -413,6 +414,10 @@ def requests():
     db.execute("INSERT INTO requests (sender_id, receiver_id, reason, amount) VALUES (?, ?, ?, ?)", (session["user_id"], receiver_id, request.form.get("reason"), amount))
     connection.commit()
 
+    # Log request
+    db.execute("INSERT INTO transactions (type, sender_id, receiver_id, reason, amount) VALUES (?, ?, ?, ?, ?)", ("Request sent", session["user_id"], receiver_id, request.form.get("reason"), amount))
+    connection.commit()
+
     return redirect(home_route)
 
 @app.route(accept_route, methods=["GET", "POST"])
@@ -467,9 +472,10 @@ def reject():
     # Necessary data for transaction and verification
     amount = locale.atof(request.form.get("amount").strip('$').replace(',', ''))
     reason = request.form.get("reason")
+    timestamp = request.form.get("timestamp")
     
     # Check request validity
-    db.execute("SELECT id FROM requests WHERE sender_id = ? AND amount = ? AND reason = ?", (receiver_id, amount, reason))
+    db.execute("SELECT id FROM requests WHERE sender_id = ? AND amount = ? AND reason = ? AND timestamp = ?", (receiver_id, amount, reason, timestamp))
     request_id = db.fetchone()[0]
     if not request_id:
         return error("Request does not exist.", 403)
@@ -478,7 +484,7 @@ def reject():
     db.execute("INSERT INTO transactions (type, sender_id, receiver_id, amount, reason) VALUES (?, ?, ?, ?, ?)", ("Request refusal", session["user_id"], receiver_id, 0, reason))
 
     # Delete request
-    db.execute("DELETE FROM requests WHERE sender_id = ? AND receiver_id = ? AND amount = ? AND reason = ?", (receiver_id, session["user_id"], amount, reason))
+    db.execute("DELETE FROM requests WHERE sender_id = ? AND receiver_id = ? AND amount = ? AND reason = ? AND timestamp = ?", (receiver_id, session["user_id"], amount, reason, timestamp))
     connection.commit()
 
     return redirect(home_route)
