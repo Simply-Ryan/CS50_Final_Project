@@ -53,6 +53,14 @@ def signed_in():
     return True
 # Login required
 
+def check_form(elements):
+    for element in elements:
+        if element == "":
+            return False
+    return True
+
+
+# Always check before accessing website
 @app.before_request
 def before_request_tasks():
     if not signed_in():
@@ -61,7 +69,7 @@ def before_request_tasks():
     connection = sqlite3.connect(db_name)
     db = connection.cursor()
 
-    # Check loan payment
+    # Check user loans
     db.execute("SELECT start_date, duration, amount, reason, id FROM loans WHERE user_id = ?", [session["user_id"]])
     loans = db.fetchall()
 
@@ -79,7 +87,7 @@ def before_request_tasks():
 
     return
 
-# Get user's username
+# Executes regardless of route
 @app.context_processor
 def get_username():
     username = None
@@ -175,6 +183,7 @@ def error(message, code):
 def register():
     if signed_in():
         return redirect(home_route)
+    
     connection = sqlite3.connect(db_name)
     db = connection.cursor()
     if request.method == "GET":
@@ -185,7 +194,8 @@ def register():
     # Check all fields
     username = request.form.get("username")
     password = request.form.get("password")
-    if not password or not username or not request.form.get("first_name") or not request.form.get("last_name") or not request.form.get("email"):
+
+    if not check_form((username, password, request.form.get("first_name"), request.form.get("last_name"), request.form.get("email"))):
         return error("All fields must be filled.", 403)
     
     # Check passwords match
@@ -212,13 +222,14 @@ def register():
     connection.commit()
     session["user_id"] = user_id
     
-    return redirect("/home")
+    return redirect(home_route)
 
 # Sign in
 @app.route(signin_route, methods=["GET", "POST"])
 def signin():
     if signed_in():
         return redirect(home_route)
+    
     connection = sqlite3.connect(db_name)
     db = connection.cursor()
 
@@ -227,19 +238,19 @@ def signin():
         return render_template("signin.html")
     
     # Check validity
-    if not request.form.get("password"):
-        return error("Password cannot be empty.", 403)
+    if not check_form((request.form.get("username"), request.form.get("password"))):
+        return error("All fields must be filled.", 403)
 
     # Check username and password
     db.execute("SELECT id, password FROM users WHERE username = ?", [request.form.get("username")])
     user = db.fetchone()
-    if user is None or not check_password_hash(user[1], request.form.get("password")):
+    if not check_password_hash(user[1], request.form.get("password")):
         return error("Incorrect username or password.", 403)
     
     # Sign user in
     user_id = user[0]
     session["user_id"] = user_id
-    return redirect("/")
+    return redirect(home_route)
 
 # Sign out
 @app.route(signout_route)
@@ -272,14 +283,13 @@ def edit_profile():
     
     if request.method == "GET":
         # Get user data
-        
         db.execute("SELECT first_name, last_name, username, email FROM users WHERE id = ?", [session["user_id"]])
         data = db.fetchone()
 
         return render_template("edit_profile.html", data=data)
     
     # Check fields validity
-    if not request.form.get("first_name") or not request.form.get("last_name") or not request.form.get("username") or not request.form.get("email"):
+    if not check_form((request.form.get("first_name"), request.form.get("last_name"), request.form.get("username"), request.form.get("email"))):
         return error("All fields must be filled.", 403)
     
     # Check username validity
@@ -299,6 +309,7 @@ def edit_profile():
 def transfer():
     if not signed_in():
         return redirect(signin_route)
+    
     return render_template("transfers.html")
 
 @app.route(send_route, methods=["GET", "POST"])
@@ -598,7 +609,3 @@ def delete_account():
 
 # Disconnect from database
 connection.close()
-
-# Debug mode
-if __name__ == "__main__":
-    app.run(debug=True)
