@@ -293,12 +293,13 @@ def edit_profile():
     if not check_form((request.form.get("first_name"), request.form.get("last_name"), request.form.get("username"), request.form.get("email"))):
         return error("All fields must be filled.", 403)
     
-    # Check username validity
-    db.execute("SELECT id, username, email FROM users WHERE username = ? OR email = ?", (request.form.get("username"), request.form.get("email")))
-    exists = db.fetchone()
+    # Check username and email validity
+    db.execute("SELECT id FROM users WHERE username = ? OR email = ?", (request.form.get("username"), request.form.get("email")))
+    users = db.fetchall()
 
-    if exists and int(exists[0]) != session["user_id"]:
-        return error("Username and/or email already exist(s).", 403)
+    for user_exists in users:
+        if user_exists and int(user_exists[0]) != session["user_id"]:
+            return error("Username and/or email already exist(s).", 403)
     
     db.execute("UPDATE users SET first_name = ?, last_name = ?, username = ?, email = ? WHERE id = ?", (request.form.get("first_name"), request.form.get("last_name"), request.form.get("username"), request.form.get("email"), session["user_id"]))
     connection.commit()
