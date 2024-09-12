@@ -1,6 +1,6 @@
 # CS50 Banks
 
-## Video Demo:  <URL (https://youtu.be/qyrX7hFzwEQ)>
+## [Demonstration Video](https://youtu.be/qyrX7hFzwEQ)
 
 ## Description:
 1. Register: On this page, the user will have to provide their first name, last name, username, email address and password. Both their username and email address have to be unique. This is fictional, so they do not have to enter any credit card information.
